@@ -31,17 +31,18 @@ ca-certificates
 
 # Install Some PPAs
 apt-add-repository ppa:ondrej/php -y
-apt-add-repository ppa:chris-lea/redis-server -y
 
 # NodeJS
-curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+NODE_MAJOR=21
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 
 # PostgreSQL
-tee /etc/apt/sources.list.d/pgdg.list <<END
-deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main
-END
+sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+# Import the repository signing key:
+wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
 
 ## Update Package Lists
 apt-get update -y
@@ -61,7 +62,7 @@ usermod -aG docker vagrant
 
 # Install docker-compose
 curl \
-    -L "https://github.com/docker/compose/releases/download/2.10.1/docker-compose-$(uname -s)-$(uname -m)" \
+    -L "https://github.com/docker/compose/releases/download/2.23.0/docker-compose-$(uname -s)-$(uname -m)" \
     -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
@@ -435,8 +436,7 @@ else
   php8.2-enchant php8.2-fpm php8.2-gd php8.2-gmp php8.2-imap php8.2-interbase php8.2-intl php8.2-ldap \
   php8.2-mbstring php8.2-mysql php8.2-odbc php8.2-opcache php8.2-pgsql php8.2-phpdbg php8.2-pspell php8.2-readline \
   php8.2-snmp php8.2-soap php8.2-sqlite3 php8.2-sybase php8.2-tidy php8.2-xml php8.2-xsl \
-  php8.2-zip
-  # php8.2-imagick php8.2-memcached php8.2-redis php8.2-xmlrpc php8.2-xdebug
+  php8.2-zip php8.2-imagick php8.2-memcached php8.2-redis php8.2-xmlrpc php8.2-xdebug
 
   # Configure php.ini for CLI
   sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/php.ini
@@ -445,11 +445,11 @@ else
   sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.2/cli/php.ini
 
   # Configure Xdebug
-   echo "xdebug.mode = debug" >> /etc/php/8.2/mods-available/xdebug.ini
-   echo "xdebug.discover_client_host = true" >> /etc/php/8.2/mods-available/xdebug.ini
-   echo "xdebug.client_port = 9003" >> /etc/php/8.2/mods-available/xdebug.ini
-   echo "xdebug.max_nesting_level = 512" >> /etc/php/8.2/mods-available/xdebug.ini
-   echo "opcache.revalidate_freq = 0" >> /etc/php/8.2/mods-available/opcache.ini
+  echo "xdebug.mode = debug" >> /etc/php/8.2/mods-available/xdebug.ini
+  echo "xdebug.discover_client_host = true" >> /etc/php/8.2/mods-available/xdebug.ini
+  echo "xdebug.client_port = 9003" >> /etc/php/8.2/mods-available/xdebug.ini
+  echo "xdebug.max_nesting_level = 512" >> /etc/php/8.2/mods-available/xdebug.ini
+  echo "opcache.revalidate_freq = 0" >> /etc/php/8.2/mods-available/opcache.ini
 
   # Configure php.ini for FPM
   sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/fpm/php.ini
@@ -474,6 +474,51 @@ else
 
   touch /home/vagrant/.homestead-features/php82
 
+  # PHP 8.3
+  apt-get install -y --allow-change-held-packages \
+  php8.3 php8.3-bcmath php8.3-bz2 php8.3-cgi php8.3-cli php8.3-common php8.3-curl php8.3-dba php8.3-dev \
+  php8.3-enchant php8.3-fpm php8.3-gd php8.3-gmp php8.3-imap php8.3-interbase php8.3-intl php8.3-ldap \
+  php8.3-mbstring php8.3-mysql php8.3-odbc php8.3-opcache php8.3-pgsql php8.3-phpdbg php8.3-pspell php8.3-readline \
+  php8.3-snmp php8.3-soap php8.3-sqlite3 php8.3-sybase php8.3-tidy php8.3-xml php8.3-xsl \
+  php8.3-zip
+  # php8.3-imagick php8.3-memcached php8.3-redis php8.3-xmlrpc php8.3-xdebug
+
+  # Configure php.ini for CLI
+  sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/php.ini
+  sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/cli/php.ini
+  sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.3/cli/php.ini
+  sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/cli/php.ini
+
+  # Configure Xdebug
+#  echo "xdebug.mode = debug" >> /etc/php/8.3/mods-available/xdebug.ini
+#  echo "xdebug.discover_client_host = true" >> /etc/php/8.3/mods-available/xdebug.ini
+#  echo "xdebug.client_port = 9003" >> /etc/php/8.3/mods-available/xdebug.ini
+#  echo "xdebug.max_nesting_level = 512" >> /etc/php/8.3/mods-available/xdebug.ini
+#  echo "opcache.revalidate_freq = 0" >> /etc/php/8.3/mods-available/opcache.ini
+
+  # Configure php.ini for FPM
+  sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/upload_max_filesize = .*/upload_max_filesize = 100M/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/post_max_size = .*/post_max_size = 100M/" /etc/php/8.3/fpm/php.ini
+  sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/fpm/php.ini
+
+  printf "[openssl]\n" | tee -a /etc/php/8.3/fpm/php.ini
+  printf "openssl.cainfo = /etc/ssl/certs/ca-certificates.crt\n" | tee -a /etc/php/8.3/fpm/php.ini
+  printf "[curl]\n" | tee -a /etc/php/8.3/fpm/php.ini
+  printf "curl.cainfo = /etc/ssl/certs/ca-certificates.crt\n" | tee -a /etc/php/8.3/fpm/php.ini
+
+  # Configure FPM
+  sed -i "s/user = www-data/user = vagrant/" /etc/php/8.3/fpm/pool.d/www.conf
+  sed -i "s/group = www-data/group = vagrant/" /etc/php/8.3/fpm/pool.d/www.conf
+  sed -i "s/listen\.owner.*/listen.owner = vagrant/" /etc/php/8.3/fpm/pool.d/www.conf
+  sed -i "s/listen\.group.*/listen.group = vagrant/" /etc/php/8.3/fpm/pool.d/www.conf
+  sed -i "s/;listen\.mode.*/listen.mode = 0666/" /etc/php/8.3/fpm/pool.d/www.conf
+
+  touch /home/vagrant/.homestead-features/php8.3
+
   # Disable old PHP FPM
   systemctl disable php5.6-fpm
   systemctl disable php7.0-fpm
@@ -483,10 +528,11 @@ else
   systemctl disable php7.4-fpm
   systemctl disable php8.0-fpm
   systemctl disable php8.1-fpm
+  systemctl disable php8.2-fpm
 
-  update-alternatives --set php /usr/bin/php8.2
-  update-alternatives --set php-config /usr/bin/php-config8.2
-  update-alternatives --set phpize /usr/bin/phpize8.2
+  update-alternatives --set php /usr/bin/php8.3
+  update-alternatives --set php-config /usr/bin/php-config8.3
+  update-alternatives --set phpize /usr/bin/phpize8.3
 
   # Install Composer
   curl -sS https://getcomposer.org/installer | php
@@ -506,7 +552,7 @@ EOF
   sed -i "s/www-data/vagrant/" /etc/apache2/envvars
 
   # Enable FPM
-  a2enconf php8.2-fpm
+  a2enconf php8.3-fpm
 
   # Assume user wants mode_rewrite support
   sudo a2enmod rewrite
@@ -572,7 +618,7 @@ EOF
   sed -i "s/;listen\.mode.*/listen.mode = 0666/" /etc/php/8.0/fpm/pool.d/www.conf
 
   service nginx restart
-  service php8.2-fpm restart
+  service php8.3-fpm restart
 
   # Add Vagrant User To WWW-Data
   usermod -a -G www-data vagrant
@@ -714,14 +760,14 @@ if "$SKIP_POSTGRESQL"; then
   echo "SKIP_POSTGRESQL is being used, so we're not installing PostgreSQL"
 else
   # Install Postgres 14
-  apt-get install -y postgresql-15 postgresql-server-dev-14 postgresql-15-postgis-3 postgresql-15-postgis-3-scripts
+  apt-get install -y postgresql-15 postgresql-server-dev-15 postgresql-15-postgis-3 postgresql-15-postgis-3-scripts
 
   # Configure Postgres Users
   sudo -u postgres psql -c "CREATE ROLE homestead LOGIN PASSWORD 'secret' SUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
 
   # Configure Postgres Remote Access
-  sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/14/main/postgresql.conf
-  echo "host    all             all             10.0.2.2/32               md5" | tee -a /etc/postgresql/14/main/pg_hba.conf
+  sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/15/main/postgresql.conf
+  echo "host    all             all             10.0.2.2/32               md5" | tee -a /etc/postgresql/15/main/pg_hba.conf
 
   sudo -u postgres /usr/bin/createdb --echo --owner=homestead homestead
   service postgresql restart
@@ -825,7 +871,7 @@ apt-get -y purge ppp pppconfig pppoeconf
 sed -i "s/^makestep.*/makestep 1 -1/" /etc/chrony/chrony.conf
 
 # Delete oddities
-apt-get -y purge popularity-contest installation-report command-not-found friendly-recovery laptop-detect
+apt-get -y purge popularity-contest command-not-found friendly-recovery laptop-detect
 
 # Exlude the files we don't need w/o uninstalling linux-firmware
 echo "==> Setup dpkg excludes for linux-firmware"
